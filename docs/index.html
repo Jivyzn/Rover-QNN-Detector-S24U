@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#090b0e" />
+  <title>RoverCam — YOLO26m ONNX Demo</title>
+  <meta name="description" content="Test Jivesh Ramnath's locally trained 8-class RoverCam YOLO26m detector directly in your browser." />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">ROVERCAM / YOLO26M / BROWSER INFERENCE</p>
+        <h1>Try my rover detector yourself.</h1>
+        <p class="lead">
+          I trained this CNN locally from scratch on my own custom Cars4Mars dataset. The final training run took about
+          <strong>35 hours</strong> on an RTX 3050 Laptop GPU. This page runs the raw ONNX export directly in your browser.
+        </p>
+        <div class="actions">
+          <button id="loadModelBtn" class="primary">Load rover model</button>
+          <a class="secondary" href="./models/best.onnx" download>Download raw ONNX</a>
+          <a class="secondary" href="https://platform.ultralytics.com/jivesh-ramnath/rovercam" target="_blank" rel="noreferrer">Ultralytics model page</a>
+          <a class="secondary" href="https://github.com/Jivyzn/Rover-QNN-Detector-S24U" target="_blank" rel="noreferrer">GitHub repo</a>
+        </div>
+        <p id="modelStatus" class="status">Model not loaded yet.</p>
+      </div>
+
+      <div class="metric-grid" aria-label="final held-out test metrics">
+        <article><span>Precision</span><strong>87.7%</strong></article>
+        <article><span>Recall</span><strong>80.7%</strong></article>
+        <article><span>mAP50</span><strong>88.7%</strong></article>
+        <article><span>mAP50–95</span><strong>69.5%</strong></article>
+      </div>
+    </header>
+
+    <section class="training-banner">
+      <div><span>TRAINED LOCALLY</span><strong>~35 hours</strong></div>
+      <div><span>CUSTOM DATASET</span><strong>15,450 training images</strong></div>
+      <div><span>HELD-OUT TEST</span><strong>306 images / 3,123 objects</strong></div>
+      <div><span>LOCAL GPU</span><strong>RTX 3050 Laptop · 4 GB</strong></div>
+    </section>
+
+    <section class="panel specs">
+      <div>
+        <p class="eyebrow">MODEL</p>
+        <h2>What I trained</h2>
+      </div>
+      <div>
+        <div class="spec-grid">
+          <div><span>Architecture</span><strong>Ultralytics YOLO26m</strong></div>
+          <div><span>Training</span><strong>From scratch</strong></div>
+          <div><span>Input</span><strong>736 × 736 RGB</strong></div>
+          <div><span>Classes</span><strong>8</strong></div>
+          <div><span>Fused parameters</span><strong>20,355,620</strong></div>
+          <div><span>Compute</span><strong>67.9 GFLOPs</strong></div>
+          <div><span>Batch size</span><strong>4</strong></div>
+          <div><span>Max epochs</span><strong>175</strong></div>
+        </div>
+        <p class="tiny">
+          Trained locally in WSL2 Ubuntu 22.04 with CUDA + AMP. The public accuracy numbers on this page are from the final
+          held-out test set, not an earlier smoke/validation run.
+        </p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-title">
+        <div>
+          <p class="eyebrow">CLASSES</p>
+          <h2>What it can detect</h2>
+        </div>
+        <span class="pill">8 custom classes</span>
+      </div>
+      <div class="class-grid" id="classGrid"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-title">
+        <div>
+          <p class="eyebrow">FINAL TEST</p>
+          <h2>Per-class performance</h2>
+        </div>
+        <span class="pill">306 held-out images</span>
+      </div>
+      <div class="table-wrap">
+        <table class="metric-table">
+          <thead><tr><th>Class</th><th>Precision</th><th>Recall</th><th>mAP50</th><th>mAP50–95</th></tr></thead>
+          <tbody>
+            <tr><td>Hammer</td><td>91.6%</td><td>83.7%</td><td>90.6%</td><td>59.5%</td></tr>
+            <tr><td>Tennis ball</td><td>84.5%</td><td>87.5%</td><td>85.1%</td><td>65.8%</td></tr>
+            <tr><td>Traffic cone</td><td>100.0%</td><td>97.9%</td><td>99.5%</td><td>86.9%</td></tr>
+            <tr><td>Black balloon</td><td>82.8%</td><td>73.5%</td><td>84.2%</td><td>60.8%</td></tr>
+            <tr><td>Blue balloon</td><td>94.1%</td><td>78.4%</td><td>92.4%</td><td>75.6%</td></tr>
+            <tr><td>Pink balloon</td><td>80.1%</td><td>72.1%</td><td>82.7%</td><td>66.2%</td></tr>
+            <tr><td>White balloon</td><td>81.4%</td><td>72.1%</td><td>83.8%</td><td>66.2%</td></tr>
+            <tr><td>Yellow balloon</td><td>87.0%</td><td>80.2%</td><td>91.1%</td><td>74.6%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="tiny">Traffic cone was the strongest class at 99.5% mAP50. Balloon detection is more sensitive to colour, shadows, lighting and overlap.</p>
+    </section>
+
+    <section class="panel demo">
+      <div class="section-title">
+        <div>
+          <p class="eyebrow">LIVE TEST</p>
+          <h2>Drop in an image</h2>
+        </div>
+        <span id="backendPill" class="pill">ONNX Runtime Web / WASM</span>
+      </div>
+
+      <div class="controls">
+        <label class="upload">
+          <input id="imageInput" type="file" accept="image/*" />
+          <span>Choose image</span>
+        </label>
+        <label>
+          Confidence
+          <input id="confSlider" type="range" min="0.05" max="0.90" step="0.01" value="0.25" />
+          <output id="confValue">0.25</output>
+        </label>
+        <label>
+          NMS IoU
+          <input id="iouSlider" type="range" min="0.10" max="0.90" step="0.01" value="0.70" />
+          <output id="iouValue">0.70</output>
+        </label>
+        <button id="runBtn" class="primary" disabled>Run detection</button>
+      </div>
+
+      <div class="stage-wrap">
+        <div id="dropZone" class="stage empty">
+          <canvas id="canvas" width="1280" height="720"></canvas>
+          <div id="emptyState" class="empty-state">Load the model, then choose an image.</div>
+        </div>
+        <aside class="results">
+          <div class="result-stat"><span>Inference</span><strong id="inferenceTime">—</strong></div>
+          <div class="result-stat"><span>Detections</span><strong id="detectionCount">0</strong></div>
+          <div class="result-stat"><span>Output</span><strong id="outputShape">—</strong></div>
+          <div id="detectionList" class="detection-list"><p>No detections yet.</p></div>
+        </aside>
+      </div>
+      <p class="tiny">
+        Browser speed depends on the device running the page. The Android V21 build in the repo is separate: that version uses the compiled QNN context on the Snapdragon 8 Gen 3 Hexagon HTP/NPU.
+      </p>
+    </section>
+
+    <footer>
+      <span>Built by Jivesh Ramnath</span>
+      <span>Cars4Mars · RoverCam · YOLO26m · ONNX · QNN</span>
+    </footer>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.27.0/dist/ort.min.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
