@@ -1,0 +1,68 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.jivyzn.roverqnn'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'com.jivyzn.roverqnn'
+        minSdk 27
+        targetSdk 36
+        versionCode 21
+        versionName '2.1.0'
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // Qualcomm's Android QNN plugin test requires extracted native libraries so
+    // ADSP_LIBRARY_PATH can point FastRPC at the app's QAIRT Skel libraries.
+    packaging {
+        jniLibs {
+            useLegacyPackaging true
+        }
+        resources {
+            excludes += ['META-INF/LICENSE*', 'META-INF/NOTICE*']
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.debug
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+// Qualcomm QNN Plugin EP 2.4.0 Android validation uses ORT Android 1.24.3.
+// Force it so no transitive artifact can silently replace the core ORT ABI.
+configurations.configureEach {
+    resolutionStrategy.force 'com.microsoft.onnxruntime:onnxruntime-android:1.24.3'
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'androidx.activity:activity:1.10.1'
+    implementation 'androidx.core:core:1.16.0'
+    implementation 'com.google.android.material:material:1.12.0'
+
+    implementation 'androidx.camera:camera-core:1.6.0'
+    implementation 'androidx.camera:camera-camera2:1.6.0'
+    implementation 'androidx.camera:camera-lifecycle:1.6.0'
+    implementation 'androidx.camera:camera-view:1.6.0'
+
+    // Plugin EP family used by current Ultralytics QNN export/deployment.
+    implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.24.3'
+    implementation 'com.qualcomm.qti:onnxruntime-android-qnn:2.4.0'
+    // Qualcomm's 2.4.0 Android test falls back to the published 2.48.0 AAR when 2.48.40 is unavailable.
+    implementation 'com.qualcomm.qti:qnn-runtime:2.48.0'
+}

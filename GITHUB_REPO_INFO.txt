@@ -1,0 +1,4 @@
+Suggested repository name: Rover-QNN-Detector-S24U
+Suggested description: Native Android YOLO26 detector running a custom 8-class QNN model on Snapdragon 8 Gen 3 Hexagon HTP/NPU.
+Suggested topics: android, computer-vision, yolo, ultralytics, onnxruntime, qualcomm, snapdragon, npu, qnn, robotics
+Suggested first tag: v21.0

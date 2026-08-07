@@ -1,0 +1,31 @@
+# Android / Gradle
+.gradle/
+**/build/
+local.properties
+*.apk
+*.aab
+
+# generated Flutter bootstrap folders
+.bootstrap*/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# logs / diagnostics
+NATIVE_*_BUILD_LOG.txt
+NATIVE_*_PHONE_LOG.txt
+MODEL_INSPECTION.txt
+*.log
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+
+# keep the verified model if PREP_FOR_GITHUB copies it here
+!models/best_qnn.onnx
