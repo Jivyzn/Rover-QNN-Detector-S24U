@@ -52,8 +52,8 @@ The detector was built for the vision/autonomy side of the **2026 Cars4Mars Afri
 | RAM | 32 GB DDR5 |
 | Training environment | WSL2 Ubuntu 22.04 + CUDA + AMP |
 | Framework | Ultralytics / PyTorch |
-| ONNX input | `1 × 3 × 736 × 736` |
-| Raw ONNX output | `1 × 12 × 11109` |
+| Browser `best.onnx` input | `4 × 3 × 736 × 736` (static batch 4) |
+| Raw ONNX output | `batch × 12 × 11109` |
 
 ## Final held-out test metrics
 
@@ -110,6 +110,8 @@ More detail is in [`docs/MODEL_TRAINING.md`](docs/MODEL_TRAINING.md).
 
 ## Browser ONNX demo
 
+The current raw `best.onnx` is a **static batch-4 export**. The site auto-detects the input shape, tiles one uploaded image to the required batch, and decodes batch item 0.
+
 The GitHub Pages demo loads:
 
 ```text
@@ -129,8 +131,8 @@ It supports:
 - inference-time readout
 - detection count
 - model output-shape display
-- raw YOLO `[1, 12, N]` output
-- end-to-end `[1, N, 6]` output if I swap exports later
+- raw YOLO `[batch, 12, N]` output
+- end-to-end `[batch, N, 6]` output if I swap exports later
 
 The browser demo is the portable raw ONNX build. It does **not** pretend to run Qualcomm QNN in the browser.
 

@@ -47,8 +47,8 @@ The final local training cycle took **about 35 hours**.
 | Ultralytics | 8.4.87 |
 | PyTorch | 2.12.1+cu130 |
 | Python | 3.10.12 |
-| ONNX input | `1 × 3 × 736 × 736` |
-| Raw ONNX output | `1 × 12 × 11109` |
+| Browser `best.onnx` input | `4 × 3 × 736 × 736` (static batch 4) |
+| Raw ONNX output | `batch × 12 × 11109` |
 
 ## Dataset
 

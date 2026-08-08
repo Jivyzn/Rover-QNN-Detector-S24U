@@ -17,6 +17,7 @@ let session = null;
 let currentImage = null;
 let imageFileName = '';
 let lastDetections = [];
+let inputSpec = { batch: 1, channels: 3, width: INPUT_SIZE, height: INPUT_SIZE, layout: 'NCHW', shape: [1, 3, INPUT_SIZE, INPUT_SIZE] };
 
 const el = id => document.getElementById(id);
 const modelStatus = el('modelStatus');
@@ -77,7 +78,8 @@ async function loadModel() {
 
     const inputName = session.inputNames[0];
     const outputName = session.outputNames[0];
-    modelStatus.textContent = `Model ready · input: ${inputName} · output: ${outputName}`;
+    inputSpec = resolveInputSpec(session.inputMetadata?.[0]);
+    modelStatus.textContent = `Model ready · input: ${inputName} ${formatShape(inputSpec.shape)} · output: ${outputName} · browser uses batch ${inputSpec.batch}`;
     loadModelBtn.textContent = 'Model loaded';
     runBtn.disabled = !currentImage;
   } catch (error) {
@@ -119,9 +121,10 @@ async function runDetection() {
   runBtn.textContent = 'Running…';
 
   try {
-    const pre = preprocess(currentImage, INPUT_SIZE, INPUT_SIZE);
+    const pre = preprocess(currentImage, inputSpec.width, inputSpec.height);
     const inputName = session.inputNames[0];
-    const tensor = new ort.Tensor('float32', pre.tensor, [1, 3, INPUT_SIZE, INPUT_SIZE]);
+    const batched = buildInputTensor(pre.tensor, inputSpec);
+    const tensor = new ort.Tensor('float32', batched, inputSpec.shape);
 
     const start = performance.now();
     const outputs = await session.run({ [inputName]: tensor });
@@ -146,6 +149,63 @@ async function runDetection() {
     runBtn.disabled = false;
     runBtn.textContent = 'Run detection';
   }
+}
+
+function resolveInputSpec(metadata) {
+  const rawShape = metadata?.shape || [];
+  if (!Array.isArray(rawShape) || rawShape.length !== 4) {
+    // This model is known to be 736px NCHW. Keep a safe fallback for older ORT builds
+    // that do not expose tensor shape metadata to the page.
+    return { batch: 1, channels: 3, width: INPUT_SIZE, height: INPUT_SIZE, layout: 'NCHW', shape: [1, 3, INPUT_SIZE, INPUT_SIZE] };
+  }
+
+  const dim = (value, fallback) => {
+    const n = Number(value);
+    return Number.isInteger(n) && n > 0 ? n : fallback;
+  };
+
+  const batch = dim(rawShape[0], 1);
+  if (dim(rawShape[1], -1) === 3) {
+    const height = dim(rawShape[2], INPUT_SIZE);
+    const width = dim(rawShape[3], INPUT_SIZE);
+    return { batch, channels: 3, width, height, layout: 'NCHW', shape: [batch, 3, height, width] };
+  }
+  if (dim(rawShape[3], -1) === 3) {
+    const height = dim(rawShape[1], INPUT_SIZE);
+    const width = dim(rawShape[2], INPUT_SIZE);
+    return { batch, channels: 3, width, height, layout: 'NHWC', shape: [batch, height, width, 3] };
+  }
+
+  throw new Error(`Unsupported model input shape ${formatShape(rawShape)}. Expected NCHW or NHWC RGB.`);
+}
+
+function buildInputTensor(singleNchw, spec) {
+  const area = spec.width * spec.height;
+  const singleElements = area * 3;
+  if (singleNchw.length !== singleElements) {
+    throw new Error(`Preprocess produced ${singleNchw.length} floats; expected ${singleElements}.`);
+  }
+
+  const out = new Float32Array(singleElements * spec.batch);
+  if (spec.layout === 'NCHW') {
+    for (let b = 0; b < spec.batch; b++) out.set(singleNchw, b * singleElements);
+    return out;
+  }
+
+  // preprocess() produces channel-first RGB. Interleave it only when a future model is NHWC.
+  for (let b = 0; b < spec.batch; b++) {
+    const base = b * singleElements;
+    for (let i = 0; i < area; i++) {
+      out[base + i * 3] = singleNchw[i];
+      out[base + i * 3 + 1] = singleNchw[area + i];
+      out[base + i * 3 + 2] = singleNchw[area * 2 + i];
+    }
+  }
+  return out;
+}
+
+function formatShape(shape) {
+  return `[${Array.from(shape || []).join(', ')}]`;
 }
 
 function preprocess(image, targetW, targetH) {
@@ -180,10 +240,12 @@ function preprocess(image, targetW, targetH) {
 function decodeOutput(output, confThreshold, iouThreshold, letterbox, sourceW, sourceH) {
   const dims = output.dims.map(Number);
   const data = output.data;
-  if (dims.length !== 3 || dims[0] !== 1) {
+  if (dims.length !== 3 || dims[0] < 1) {
     throw new Error(`Unsupported output shape [${dims.join(', ')}]`);
   }
 
+  // The browser demo displays one uploaded image. If the ONNX graph has a static batch > 1,
+  // the input image is duplicated to satisfy the graph and we decode batch item 0 here.
   const a = dims[1];
   const b = dims[2];
   let detections;

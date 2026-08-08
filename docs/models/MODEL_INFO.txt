@@ -5,8 +5,8 @@ Original source: C:\Users\jivyz\Downloads\best.onnx
 Size bytes: 21005878
 Size MB: 20.03
 SHA-256: 333E34EA6060ACAF9EA657DC8450650F6FBE5E752BB544ECBE5CC70F318209B2
-Expected input: [1, 3, 736, 736]
-Expected raw output: [1, 12, 11109]
+Browser model input: static batch is auto-detected at runtime (current best.onnx reports [4, 3, 736, 736])
+Expected raw output: [batch, 12, 11109]
 Classes: 8
 Class order: hammer, tennis ball, traffic cone, black balloon, blue balloon, pink balloon, white balloon, yellow balloon
 Training: locally from scratch on a custom dataset
