@@ -19,12 +19,12 @@
           <strong>35 hours</strong> on an RTX 3050 Laptop GPU. This page runs the raw ONNX export directly in your browser.
         </p>
         <div class="actions">
-          <button id="loadModelBtn" class="primary">Load rover model</button>
+          <button id="loadModelBtn" class="primary">Loading model…</button>
           <a class="secondary" href="./models/best.onnx" download>Download raw ONNX</a>
           <a class="secondary" href="https://platform.ultralytics.com/jivesh-ramnath/rovercam" target="_blank" rel="noreferrer">Ultralytics model page</a>
           <a class="secondary" href="https://github.com/Jivyzn/Rover-QNN-Detector-S24U" target="_blank" rel="noreferrer">GitHub repo</a>
         </div>
-        <p id="modelStatus" class="status">Model not loaded yet.</p>
+        <p id="modelStatus" class="status">Starting ONNX Runtime and loading the rover model…</p>
       </div>
 
       <div class="metric-grid" aria-label="final held-out test metrics">
@@ -127,7 +127,7 @@
           <input id="iouSlider" type="range" min="0.10" max="0.90" step="0.01" value="0.70" />
           <output id="iouValue">0.70</output>
         </label>
-        <button id="runBtn" class="primary" disabled>Run detection</button>
+        <button id="runBtn" class="primary" disabled>Waiting for model…</button>
       </div>
 
       <div class="stage-wrap">
@@ -139,7 +139,8 @@
           <div class="result-stat"><span>Inference</span><strong id="inferenceTime">—</strong></div>
           <div class="result-stat"><span>Detections</span><strong id="detectionCount">0</strong></div>
           <div class="result-stat"><span>Output</span><strong id="outputShape">—</strong></div>
-          <div id="detectionList" class="detection-list"><p>No detections yet.</p></div>
+          <div class="result-stat"><span>Max class score</span><strong id="maxScore">—</strong></div>
+          <div id="detectionList" class="detection-list"><p id="runtimeMessage">The model loads automatically. Choose an image when it is ready.</p></div>
         </aside>
       </div>
       <p class="tiny">
