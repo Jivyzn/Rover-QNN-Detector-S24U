@@ -4,3 +4,4 @@
 *.java text eol=lf
 *.md text eol=lf
 *.onnx binary
+*.pt binary

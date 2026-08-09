@@ -244,6 +244,15 @@ For QNN/FastRPC logs:
 GET_NATIVE_LOG.cmd
 ```
 
+## Retrained model - RoverCam26m
+
+A retrained YOLO26m checkpoint with higher reported evaluation metrics has been added under [`models/`](models/README.md) while the original verified `best_qnn.onnx` is retained for the existing Android deployment path.
+
+Retrained metrics: **93.3% precision**, **84.5% recall**, **89.8% mAP50**, and **79.7% mAP50-95**.
+
+Ultralytics model: **https://platform.ultralytics.com/jivesh-ramnath/rovercam/rovercam26m**
+
+See [`models/README.md`](models/README.md) for file hashes, model-version details and the training link.
 ## Author
 
 **Jivesh Ramnath**
